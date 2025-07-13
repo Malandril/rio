@@ -312,6 +312,16 @@ impl From<String> for Action {
             }
         }
 
+        let re = regex::Regex::new(r"vimotion\(([^()]+)\)").unwrap();
+        for capture in re.captures_iter(&action) {
+            if let Some(matched) = capture.get(1) {
+                let matched_string = matched.as_str();
+                if let Ok(vim_motion) = matched_string.try_into() {
+                    return Action::ViMotion(vim_motion);
+                }
+            }
+        }
+
         Action::None
     }
 }
@@ -1419,5 +1429,23 @@ mod tests {
 
         assert_eq!(new_bindings.len(), 2);
         assert_eq!(new_bindings[1].action, Action::ReceiveChar);
+    }
+
+    #[test]
+    fn string_into_vim_action() {
+        assert_eq!(
+            Action::from("ViMotion(Up)".to_string()),
+            Action::ViMotion(ViMotion::Up)
+        );
+    }
+
+    #[test]
+    fn string_into_unkown_vim_action() {
+        assert_eq!(Action::from("ViMotion(unknown)".to_string()), Action::None);
+    }
+
+    #[test]
+    fn string_into_unkown_action() {
+        assert_eq!(Action::from("unknown".to_string()), Action::None);
     }
 }
