@@ -314,6 +314,16 @@ impl From<String> for Action {
             }
         }
 
+        let re = regex::Regex::new(r"vimotion\(([^()]+)\)").unwrap();
+        for capture in re.captures_iter(&action) {
+            if let Some(matched) = capture.get(1) {
+                let matched_string = matched.as_str();
+                if let Ok(vim_motion) = matched_string.try_into() {
+                    return Action::ViMotion(vim_motion);
+                }
+            }
+        }
+
         Action::None
     }
 }
@@ -870,23 +880,23 @@ pub fn config_key_bindings(
     if config_key_bindings.is_empty() {
         return bindings;
     }
-
+    // allow multiple bindings for the same key
+    let mut new_bindings = Vec::new();
     for ckb in config_key_bindings {
         match convert(ckb) {
             Ok(key_binding) => {
                 // Remove any default binding that would conflict with this user binding
                 // This ensures user bindings always take precedence and prevents conflicts
                 bindings.retain(|b| !b.triggers_match(&key_binding));
-
                 tracing::info!("added a new key_binding: {:?}", key_binding);
-                bindings.push(key_binding)
+                new_bindings.push(key_binding);
             }
             Err(err_message) => {
                 tracing::error!("error loading a key binding: {:?}", err_message);
             }
         }
     }
-
+    bindings.extend(new_bindings);
     bindings
 }
 
@@ -1540,5 +1550,23 @@ mod tests {
         assert_eq!(new_bindings.len(), 1);
 
         assert_eq!(&new_bindings[0].action, &Action::Scroll(1));
+    }
+
+    #[test]
+    fn string_into_vim_action() {
+        assert_eq!(
+            Action::from("ViMotion(Up)".to_string()),
+            Action::ViMotion(ViMotion::Up)
+        );
+    }
+
+    #[test]
+    fn string_into_unkown_vim_action() {
+        assert_eq!(Action::from("ViMotion(unknown)".to_string()), Action::None);
+    }
+
+    #[test]
+    fn string_into_unkown_action() {
+        assert_eq!(Action::from("unknown".to_string()), Action::None);
     }
 }

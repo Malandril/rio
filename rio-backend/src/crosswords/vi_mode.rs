@@ -54,6 +54,35 @@ pub enum ViMotion {
     Bracket,
 }
 
+impl TryFrom<&str> for ViMotion {
+    type Error = ();
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "bracket" => Ok(ViMotion::Bracket),
+            "down" => Ok(ViMotion::Down),
+            "first" => Ok(ViMotion::First),
+            "firstoccupied" => Ok(ViMotion::FirstOccupied),
+            "high" => Ok(ViMotion::High),
+            "last" => Ok(ViMotion::Last),
+            "left" => Ok(ViMotion::Left),
+            "low" => Ok(ViMotion::Low),
+            "middle" => Ok(ViMotion::Middle),
+            "right" => Ok(ViMotion::Right),
+            "semanticleft" => Ok(ViMotion::SemanticLeft),
+            "semanticright" => Ok(ViMotion::SemanticRight),
+            "semanticleftend" => Ok(ViMotion::SemanticLeftEnd),
+            "semanticrightend" => Ok(ViMotion::SemanticRightEnd),
+            "up" => Ok(ViMotion::Up),
+            "wordleft" => Ok(ViMotion::WordLeft),
+            "wordright" => Ok(ViMotion::WordRight),
+            "wordleftend" => Ok(ViMotion::WordLeftEnd),
+            "wordrightend" => Ok(ViMotion::WordRightEnd),
+            _ => Err(()),
+        }
+    }
+}
+
 /// Cursor tracking vi mode position.
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct ViModeCursor {
